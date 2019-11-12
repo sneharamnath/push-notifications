@@ -1,18 +1,85 @@
 import React, { Component } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import {StyleSheet, Text, View, TextInput, Modal, TouchableOpacity } from 'react-native';
+import * as Permissions from 'expo-permissions';
+import { Notifications } from 'expo';
+import Constants from 'expo-constants';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' + 'Shake or press menu button for dev menu',
-});
+const PUSH_REGISTRATION_ENDPOINT = 'http://a1936df3.ngrok.io/token';
+const MESSAGE_ENPOINT = 'http://a1936df3.ngrok.io/message';
 
 export default class App extends Component {
+  state = {
+    notification: null,
+    messageText: ''
+  }
+
+  componentDidMount() {
+    this.registerForPushNotificationsAsync();
+    this.notificationSubscription = Notifications.addListener(this.handleNotification);
+  }
+  // Handle registering push notification token to the server
+  registerForPushNotificationsAsync = async () => {
+    const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+    if (status !== 'granted') {
+      return;
+    }
+    let token = await Notifications.getExpoPushTokenAsync();
+    console.log(token);
+    return fetch(PUSH_REGISTRATION_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: {
+          value: token,
+        },
+        user: {
+          username: 'marley',
+          name: 'Dan Ward'
+        },
+      }),
+    });
+  }
+
+  handleNotification = (notification) => {
+    this.setState({ notification });
+    console.log(this.state);
+  }
+
+  handleChangeText = (text) => {
+    this.setState({ messageText: text });
+  }
+
+  sendMessage = async () => {
+    fetch(MESSAGE_ENPOINT, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: this.state.messageText,
+      }),
+    });
+    this.setState({ messageText: '' });
+  }
+  
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
+        <TextInput
+          value={this.state.messageText}
+          onChangeText={this.handleChangeText}
+          style={styles.textInput}
+        />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={this.sendMessage}
+        >
+        <Text style={styles.buttonText}>Send</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -21,18 +88,26 @@ export default class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#474747',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    justifyContent: 'center',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+  textInput: {
+    height: 50,
+    width: 300,
+    borderColor: '#f6f6f6',
+    borderWidth: 1,
+    backgroundColor: '#fff',
+    padding: 10
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+  button: {
+    padding: 10
   },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff'
+  },
+  label: {
+    fontSize: 18
+  }
 });
