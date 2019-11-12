@@ -7,6 +7,8 @@ const expo = new Expo(); // new instance of expo server sdk
 let savedPushTokens = []; // storing tokens that are registered with the app
 const PORT_NUMBER = 5656; // port on which you want to run your server on
 
+app.use(express.json());
+
 // Save user expo token
 const saveToken = (token) => {
     if (savedPushTokens.indexOf(token === -1)) {
@@ -51,7 +53,6 @@ app.get('/', (req, res) => {
 
 // Endpoint for saving push notification token
 app.post('/token', (req, res) => {
-    console.log(req.body);
     saveToken(req.body.token.value);
     console.log(`Received push token, ${req.body.token.value}`);
     res.send(`Received push token, ${req.body.token.value}`);
@@ -68,5 +69,3 @@ app.post('/message', (req, res) => {
 app.listen(PORT_NUMBER, () => {
     console.log('Server Online on Port' + PORT_NUMBER);
 });
-
-app.use(express.json());

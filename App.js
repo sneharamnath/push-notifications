@@ -33,7 +33,7 @@ export default class App extends Component {
       },
       body: JSON.stringify({
         token: {
-          value: token,
+          value: token
         },
         user: {
           username: 'marley',
