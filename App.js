@@ -1,112 +1,63 @@
+// React Dependencies
 import React, { Component } from 'react';
 import {StyleSheet, Text, View, TextInput, Modal, TouchableOpacity } from 'react-native';
-import * as Permissions from 'expo-permissions';
-import { Notifications } from 'expo';
+import {createAppContainer, NavigationEvents} from 'react-navigation';
+import {createBottomTabNavigator} from 'react-navigation-tabs';
+import {createStackNavigator} from 'react-navigation-stack';
+
+// Expo dependencies
+import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 
-const PUSH_REGISTRATION_ENDPOINT = 'http://72d9a5c7.ngrok.io/token';
-const MESSAGE_ENPOINT = ' http://72d9a5c7.ngrok.io/message';
+//Component dependencies
+import Home from './screens/home';
+import Notitication from './screens/notifications';
 
-export default class App extends Component {
-  state = {
-    notification: null,
-    messageText: ''
-  }
-
-  componentDidMount() {
-    this.registerForPushNotificationsAsync();
-    this.notificationSubscription = Notifications.addListener(this.handleNotification);
-  }
-  // Handle registering push notification token to the server
-  registerForPushNotificationsAsync = async () => {
-    const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
-    if (status !== 'granted') {
-      return;
-    }
-    let token = await Notifications.getExpoPushTokenAsync();
-    return fetch(PUSH_REGISTRATION_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
+const AppNavBar = createBottomTabNavigator(
+  {
+    HomePage: {
+      screen: Home,
+      navigationOptions: {
+        tabBarLabel:"Home",
+        tabBarIcon: ({ tintColor }) => (
+          <Ionicons name="md-home" size={32} color={tintColor} />
+        )
       },
-      body: JSON.stringify({
-        token: {
-          value: token
-        },
-        user: {
-          username: 'marley',
-          name: 'Dan Ward'
-        },
-      }),
-    });
-  }
+    },
+    NotificationsPage: {
+      screen: Notitication,
+      navigationOptions: {
+        tabBarLabel:"Settings",
+        tabBarIcon: ({ tintColor }) => (
+          <Ionicons name="md-notifications" size={32} color={tintColor} />
+        )
+      }
+    },
+  },
 
-  handleNotification = (notification) => {
-    this.setState({ notification: notification });
-    console.log(this.state);
-  }
-
-  handleChangeText = (text) => {
-    this.setState({ messageText: text });
-  }
-
-  sendMessage = async () => {
-    fetch(MESSAGE_ENPOINT, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+  {
+    order: ['HomePage', 'NotificationsPage'],
+    tabBarOptions: {
+      activeTintColor: '#3780BE',
+      inactiveTintColor: 'gray',
+      style: {
+        backgroundColor: 'white',
       },
-      body: JSON.stringify({
-        message: this.state.messageText,
-      }),
-    });
-    this.setState({ messageText: '' });
-  }
-  
-  render() {
-    return (
-      <View style={styles.container}>
-        <TextInput
-          value={this.state.messageText}
-          onChangeText={this.handleChangeText}
-          style={styles.textInput}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={this.sendMessage}
-        >
-        <Text style={styles.buttonText}>Send</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#474747',
-    alignItems: 'center',
-    justifyContent: 'center',
+      showLabel: false
+    },
   },
-  textInput: {
-    height: 50,
-    width: 300,
-    borderColor: '#f6f6f6',
-    borderWidth: 1,
-    backgroundColor: '#fff',
-    padding: 10
+);
+ 
+//making a StackNavigator to export as default
+const App = createStackNavigator({
+  TabScreen: {
+    screen: AppNavBar,
+    navigationOptions: {
+      headerTintColor: '#FFFFFF',
+      title: '',
+    },
   },
-  button: {
-    padding: 10
-  },
-  buttonText: {
-    fontSize: 18,
-    color: '#fff'
-  },
-  label: {
-    fontSize: 18
-  }
 });
+
+
+export default createAppContainer(App);
