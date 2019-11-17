@@ -4,8 +4,8 @@ import * as Permissions from 'expo-permissions';
 import { Notifications } from 'expo';
 import Constants from 'expo-constants';
 
-const PUSH_REGISTRATION_ENDPOINT = 'http://a1936df3.ngrok.io/token';
-const MESSAGE_ENPOINT = 'http://a1936df3.ngrok.io/message';
+const PUSH_REGISTRATION_ENDPOINT = 'http://72d9a5c7.ngrok.io/token';
+const MESSAGE_ENPOINT = ' http://72d9a5c7.ngrok.io/message';
 
 export default class App extends Component {
   state = {
@@ -24,7 +24,6 @@ export default class App extends Component {
       return;
     }
     let token = await Notifications.getExpoPushTokenAsync();
-    console.log(token);
     return fetch(PUSH_REGISTRATION_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -44,7 +43,7 @@ export default class App extends Component {
   }
 
   handleNotification = (notification) => {
-    this.setState({ notification });
+    this.setState({ notification: notification });
     console.log(this.state);
   }
 

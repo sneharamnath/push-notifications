@@ -1,5 +1,6 @@
 import express from 'express';
 import Expo from 'expo-server-sdk';
+import kafka from 'kafka-node';
 
 const app = express(); // creates express server app
 const expo = new Expo(); // new instance of expo server sdk
@@ -9,15 +10,43 @@ const PORT_NUMBER = 5656; // port on which you want to run your server on
 
 app.use(express.json());
 
+const Consumer = kafka.Consumer;
+// The client specifies the ip of the Kafka producer and uses the zookeeper port 2181
+const client = new kafka.KafkaClient("localhost:2181");
+// The consumer object specifies the client and topic(s) it subscribes to
+const consumer = new Consumer(client, [ { topic: 'employee', partition: 0 } ], { autoCommit: true });
+consumer.on('message', function (message) {
+    // grab the main content from the Kafka message
+    var data = JSON.parse(message.value);
+    handlePushTokens(data);
+});
+
 // Save user expo token
 const saveToken = (token) => {
     if (savedPushTokens.indexOf(token === -1)) {
       savedPushTokens.push(token);
     }
 }
+
 // Handler for sending push notifications
 const handlePushTokens = (message) => {
     let notifications = [];
+    let response = {};
+    switch(message.type){
+        case 'IntimationCreatedKafkaEvent':
+            response.title = 'WFH',
+            response.content = 'Sneha is WFH today'
+            break;
+        case 'IntimationCancelledKafkaEvent':
+            response.title = 'Cancelled WFH',
+            response.content = 'Sneha has cancelled her WFH request'
+            break;
+        default:
+            response.title = '',
+            response.content = ''
+            break;
+    }  
+    console.log(response);
     for (let pushToken of savedPushTokens) {
       if (!Expo.isExpoPushToken(pushToken)) {
         console.error(`Push token ${pushToken} is not a valid Expo push token`);
@@ -26,9 +55,9 @@ const handlePushTokens = (message) => {
       notifications.push({
         to: pushToken,
         sound: 'default',
-        title: 'Message received!',
-        body: message,
-        data: { message }
+        title: response.title,
+        body: response.content,
+        data: message
       })
     }
     let chunks = expo.chunkPushNotifications(notifications);
@@ -48,6 +77,7 @@ const handlePushTokens = (message) => {
 // Default route
 app.get('/', (req, res) => {
     res.send('Push Notification Server Running At port 5656');
+    
 });
 
 
