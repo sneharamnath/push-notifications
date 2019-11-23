@@ -6,7 +6,7 @@ import { View, Text } from 'react-native';
 import * as Permissions from 'expo-permissions';
 import { Notifications } from 'expo';
 
-const PUSH_REGISTRATION_ENDPOINT = 'http://a805b47e.ngrok.io/token';
+const PUSH_REGISTRATION_ENDPOINT = '{#ngrok-generated-url}/token';
 export class Home extends Component {
   
   state = {
